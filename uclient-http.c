@@ -27,6 +27,7 @@
 #include <libubox/ustream-ssl.h>
 #include <libubox/usock.h>
 #include <libubox/blobmsg.h>
+#include <assert.h>
 
 #include "uclient.h"
 #include "uclient-utils.h"
@@ -489,15 +490,13 @@ uclient_http_add_auth_digest(struct uclient_http *uh)
 			dest = &data.nonce;
 		else if (strmatch(&next, "opaque"))
 			dest = &opaque;
-		else if (strmatch(&next, "stale") ||
-			 strmatch(&next, "algorithm") ||
-			 strmatch(&next, "auth-param")) {
-			digest_sep(&next);
-			continue;
-		} else if (strmatch(&next, "domain") ||
-			 strmatch(&next, "qop-options"))
+		else if (strmatch(&next, "domain") ||
+			strmatch(&next, "qop-options"))
 			dest = &tmp;
 		else {
+			assert (strmatch(&next, "stale") ||
+				strmatch(&next, "algorithm") ||
+				strmatch(&next, "auth-param"));
 			digest_sep(&next);
 			continue;
 		}
