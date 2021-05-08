@@ -15,6 +15,7 @@ check uclient-fetch usage:
   \t--user=<user>\t\t\tHTTP authentication username (esc)
   \t--password=<password>\t\tHTTP authentication password (esc)
   \t--user-agent | -U <str>\t\tSet HTTP user agent (esc)
+  \t--header='Header: value'\t\tAdd HTTP header. Multiple allowed (esc)
   \t--post-data=STRING\t\tuse the POST method; send STRING as the data (esc)
   \t--post-file=FILE\t\tuse the POST method; send FILE as the data (esc)
   \t--spider | -s\t\t\tSpider mode - only check file existence (esc)

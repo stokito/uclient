@@ -44,6 +44,7 @@
 static const char *user_agent = "uclient-fetch";
 static const char *post_data;
 static const char *post_file;
+static const char **raw_headers = NULL;
 static struct ustream_ssl_ctx *ssl_ctx;
 static const struct ustream_ssl_ops *ssl_ops;
 static int quiet = false;
@@ -342,6 +343,7 @@ static int init_request(struct uclient *cl)
 
 	uclient_http_reset_headers(cl);
 	uclient_http_set_header(cl, "User-Agent", user_agent);
+	uclient_http_set_raw_headers(cl, raw_headers);
 	if (cur_resume)
 		check_resume_offset(cl);
 
@@ -481,6 +483,7 @@ static int usage(const char *progname)
 		"	--continue | -c			Continue a partially-downloaded file\n"
 		"	--user=<user>			HTTP authentication username\n"
 		"	--password=<password>		HTTP authentication password\n"
+		"	--header='Header: value'		Add HTTP header. Multiple allowed\n"
 		"	--user-agent | -U <str>		Set HTTP user agent\n"
 		"	--post-data=STRING		use the POST method; send STRING as the data\n"
 		"	--post-file=FILE		use the POST method; send FILE as the data\n"
@@ -542,6 +545,7 @@ enum {
 	L_USER,
 	L_PASSWORD,
 	L_USER_AGENT,
+	L_HEADER,
 	L_POST_DATA,
 	L_POST_FILE,
 	L_SPIDER,
@@ -559,6 +563,7 @@ static const struct option longopts[] = {
 	[L_USER] = { "user", required_argument, NULL, 0 },
 	[L_PASSWORD] = { "password", required_argument, NULL, 0 },
 	[L_USER_AGENT] = { "user-agent", required_argument, NULL, 0 },
+	[L_HEADER] = { "header", required_argument, NULL, 0 },
 	[L_POST_DATA] = { "post-data", required_argument, NULL, 0 },
 	[L_POST_FILE] = { "post-file", required_argument, NULL, 0 },
 	[L_SPIDER] = { "spider", no_argument, NULL, 0 },
@@ -578,6 +583,7 @@ int main(int argc, char **argv)
 	const char *proxy_url;
 	char *username = NULL;
 	char *password = NULL;
+	int raw_headers_count = 0;
 	struct uclient *cl;
 	int longopt_idx = 0;
 	bool has_cert = false;
@@ -625,6 +631,16 @@ int main(int argc, char **argv)
 				break;
 			case L_USER_AGENT:
 				user_agent = optarg;
+				break;
+			case L_HEADER:
+				if (!raw_headers) {
+					/* Max possible count of headers is the count of args (argc) - 2
+					 Since the first arg is program and last is a URL.
+					 But user may forget the URL and raw_headers is null terminated so allocate argc */
+					raw_headers = calloc(argc, sizeof(char *));
+				}
+				raw_headers[raw_headers_count] = optarg;
+				raw_headers_count++;
 				break;
 			case L_POST_DATA:
 				post_data = optarg;

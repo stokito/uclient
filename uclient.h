@@ -121,6 +121,7 @@ extern const struct uclient_backend uclient_backend_http;
 
 int uclient_http_reset_headers(struct uclient *cl);
 int uclient_http_set_header(struct uclient *cl, const char *name, const char *value);
+int uclient_http_set_raw_headers(struct uclient *cl, const char **raw_headers);
 int uclient_http_set_request_type(struct uclient *cl, const char *type);
 int uclient_http_redirect(struct uclient *cl);
 

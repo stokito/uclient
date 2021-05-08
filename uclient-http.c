@@ -96,6 +96,7 @@ struct uclient_http {
 
 	uint32_t nc;
 
+	const char **raw_headers;
 	struct blob_buf headers;
 	struct blob_buf meta;
 };
@@ -587,6 +588,20 @@ uclient_http_add_auth_header(struct uclient_http *uh)
 	return 0;
 }
 
+static void
+uclient_http_send_raw_headers(const struct uclient_http *uh) {
+	if (!uh->raw_headers) {
+		return;
+	}
+	const char **raw_headers = uh->raw_headers;
+	const char *raw_header = *raw_headers;
+	while (raw_header != NULL) {
+		ustream_printf(uh->us, "%s\r\n", raw_header);
+		raw_headers++;
+		raw_header = *raw_headers;
+	}
+}
+
 static int
 uclient_http_send_headers(struct uclient_http *uh)
 {
@@ -625,6 +640,7 @@ uclient_http_send_headers(struct uclient_http *uh)
 	if (err)
 		return err;
 
+	uclient_http_send_raw_headers(uh);
 	ustream_printf(uh->us, "\r\n");
 
 	uh->state = HTTP_STATE_HEADERS_SENT;
@@ -1022,6 +1038,21 @@ uclient_http_set_header(struct uclient *cl, const char *name, const char *value)
 		return -1;
 
 	blobmsg_add_string(&uh->headers, name, value);
+	return 0;
+}
+
+int
+uclient_http_set_raw_headers(struct uclient *cl, const char **raw_headers)
+{
+	struct uclient_http *uh = container_of(cl, struct uclient_http, uc);
+
+	if (cl->backend != &uclient_backend_http)
+		return -1;
+
+	if (uh->state > HTTP_STATE_INIT)
+		return -1;
+
+	uh->raw_headers = raw_headers;
 	return 0;
 }
 
